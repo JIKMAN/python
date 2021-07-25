@@ -417,3 +417,94 @@ test1
 
 
 
+> ## LBYL vs EAFP
+>
+> Look Before You Leap vs Easier to Ask for Forgiveness than Permission
+
+- LBYL : isinstance 함수로 오류를 사전에 방지하는 방법
+- EAFP : 일단 작성 후 오류를 확인하는 방법
+
+```python
+# LBYL로 표현
+
+class Paint:
+    """그림판 프로그램 클래스"""
+    def __init__(self):
+        self.shapes = []
+        
+    def add_shape(self, shape: Shape):
+        """그림판에 도형을 추가한다"""
+        self.shapes.append(shape)
+        
+    def total_area_of_shapes(self):
+        """그림판에 있는 모든 도형의 넓이의 합을 구한다"""
+        return sum([shape.area() for shape in self.shapes])
+    	# 인스턴스 중 area함수가 없는 인스턴스가 포함되있는 경우 오류가 남!
+```
+
+```python
+# EAFP로 표현
+from abc import ABC, abstractmethod
+
+class Shape(ABC):
+    """도형 클래스"""
+    @abstractmethod
+    def area(self) -> float:
+        """도형의 넓이를 리턴한다: 자식 클래스가 오버라이딩할 것"""
+        
+class Rectangle(Shape):
+    """직사각형 클래스"""
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        """직사각형의 넓이를 리턴한다"""
+        return self.width * self.height
+    
+class Star:
+    """별모양 클래스"""
+    def __init__(self, apex):
+        self.apex = apex
+        
+    def __str__(self):
+        return '별모양'
+        
+class Paint:
+    """그림판 프로그램 클래스"""
+    def __init__(self):
+        self.shapes = []
+        
+    def add_shape(self, shape: Shape):
+        """그림판에 도형 인스턴스 shape를 추가한다. 단, shape은 추상 클래스
+        Shape의 인스턴스여야 한다"""
+        self.shapes.append(shape)
+        
+    def total_area_of_shapes(self):
+        """그림판에 있는 모든 도형의 넓이의 합을 구한다"""
+        total_area = 0
+        
+        # area 메소드가 없는 인스턴스가 있는지는 일단 해보고 생각하자!
+        for shape in self.shapes:
+            try: # 일단 더해본다.
+                total_area += shape.area()
+            except (AttributeError, TypeError):# 속성오류나 타입오류 일경우
+                print(f'그림판에 area메소드가 없거나 잘못 정의되어 있는 인스턴스 {shape}이 있습니다.')
+        return total_area
+    
+rec1 = Rectangle(3, 7)
+rec2 = Rectangle(5, 3)
+star = Star(5)
+paint = Paint()
+
+paint.add_shape(rec1)
+paint.add_shape(rec2)
+paint.add_shape(star)
+print(paint.total_area_of_shapes())
+
+---------------------------------------
+
+그림판에 area메소드가 없거나 잘못 정의되어 있는 인스턴스 별모양이 있습니다.
+36
+```
+
