@@ -150,3 +150,270 @@ developer1.work()
 >>>David develops something
 ```
 
+
+
+> ## 추상클래스
+
+- 여러 클래스들의 공통점을 추상화 해서 모아놓은 클래스
+
+추상클래스를 상속 받은 자식 클래스의 경우
+
+##### 추상클래스의 자식클래스들은 추상메소드 사용시 반드시 오버라이딩 하도록 강제화된다.
+
+- 추상클래스는 최소 한개 이상의 추상 메소드를 가지고 있어야한다.
+- 추상클래스는 인스턴스를 가질 수 없다.
+- 추상클래스도 일반메서드를 만들 수 있다.
+
+```python
+from math import sqrt
+from abc import ABC, abstractmethod # 추상클래스 선언하기 위한 라이브러리
+
+class Shape(ABC): # 추상클래스 설정
+    """도형 클래스"""
+    @abstractmethod # 추상메소드 설정
+    def area(self) -> float:
+        """도형의 넓이를 리턴한다: 자식 클래스가 반드시 오버라이딩 할 것"""
+        pass
+
+    @abstractmethod
+    def perimeter(self) -> float:
+        """도형의 둘레를 리턴한다: 자식 클래스가 반드시 오버라이딩할 것"""
+        pass
+    
+    def larger_than(self, shape): # 추상 클래스의 일반 메소드
+        """해당 인스턴스의 넓이가 파라미터 인스턴스의 넓이보다 큰지를 불린으로 나타낸다"""
+        return self.area() > shape.area()
+    
+    
+class Paint:
+    """그림판 프로그램 클래스"""
+    def __init__(self):
+        self.shapes = []
+
+    def add_shape(self, shape : Shape): 
+        # Shape 클래스의 인스턴스만 파라미터로 가져올 수 있도록 추상화 !
+        """도형 인스턴스만 그림판에 추가한다"""
+        if isinstance(shape, Shape):
+            self.shapes.append(shape)
+        else:
+            print("도형 클래스가 아닌 인스턴스는 추가할 수 없습니다!")
+
+    def total_area_of_shapes(self):
+        """그림판에 있는 모든 도형의 넓이의 합을 구한다"""
+        return sum([shape.area() for shape in self.shapes])
+
+    def total_perimeter_of_shapes(self):
+        """그림판에 있는 모든 도형의 둘레의 합을 구한다"""
+        return sum([shape.perimeter() for shape in self.shapes])
+
+    
+class RightTriangle(Shape):   # 추상클래스를 상속받은 자식 클래스
+    def __init__(self, base, height):
+        self.base = base
+        self.height = height
+    
+    def area(self):
+        return self.base * self.height / 2
+        
+    def perimeter(self):
+        return sqrt(self.base**2 + self.height**2) + self.base + self.height
+    
+class Circle(Shape):  # 추상클래스를 상속받은 자식 클래스
+    """원 클래스"""
+    def __init__(self, radius):
+        self.radius = radius
+
+    def area(self):
+        """원의 넓이를 리턴한다"""
+        return pi * self.radius * self.radius
+
+    def perimeter(self):
+        """원의 둘레를 리턴한다"""
+        return 2 * pi * self.radius
+    
+right_triangle_1 = RightTriangle(3, 4)
+right_triangle_2 = RightTriangle(5, 12)
+right_triangle_3 = RightTriangle(6, 8)
+
+paint_program = Paint()
+
+paint_program.add_shape(right_triangle_1)
+paint_program.add_shape(right_triangle_2)
+paint_program.add_shape(right_triangle_3)
+
+print(paint_program.total_area_of_shapes())
+print(paint_program.total_perimeter_of_shapes())
+
+--------------------------------------------
+
+>>> 60.0
+>>> 66.0
+```
+
+* 추상 메소드에 내용을 추가할수도 있다.
+
+```python
+from abc import ABC, abstractmethod
+
+class Shape(ABC):
+    """도형 클래스"""
+    @abstractmethod
+    def area(self) -> float:
+        """도형의 넓이를 리턴한다: 자식 클래스가 오버라이딩할 것"""
+        print("도형의 넓이 계산 중!")   # ---------------- 추가된 코드
+        
+class Rectangle(Shape):
+    """직사각형 클래스"""
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        """직사각형의 넓이를 리턴한다"""
+        super().area() # ---------------- 부모의 메소드를 가져다 씀
+        return self.width * self.height
+
+rectangle = Rectangle(3, 4)
+print(rectangle.area())
+    
+-----------------------------------------------
+
+>>> 도형의 넓이 계산 중!
+>>> 12
+```
+
+
+
+### 추상클래스에서의 다중상속
+
+* 일반클래스에서는 함수가 겹치는 경우 의도한대로 되지 않을 경우가 있어 다중상속을 잘 사용하지 않지만,
+
+- 자식클래스에서 추상메소드를 반드시 오버라이딩 해야되기 때문에 겹칠 문제가 없다. 따라서 추상클래스에서의 다중상속은 자주 쓰이는 방법이다.
+
+```python
+from abc import ABC, abstractmethod
+
+class Message(ABC):
+    @abstractmethod
+    def print_message(self) -> None:
+        pass
+    @abstractmethod
+    def send(self, destination: str) -> None:  # ----- 중복되는 추상 메소드
+        pass
+
+class Sendable(ABC):
+    @abstractmethod
+    def send(self, destination: str) -> None:
+        pass
+
+class Email(Message, Sendable): # 추상클래스 다중 상속을 받았음, 오버라이딩 해야함.
+    def __init__(self, content, user_email):
+        self.content = content
+        self.user_email = user_email
+
+    def print_message(self):
+        print("이메일 내용입니다:\n{}".format(self.content))
+
+    def send(self, destination):
+        print("이메일을 주소 {}에서 {}로 보냅니다!".format(self.user_email, destination))
+        
+# 이메일 인스턴스를 생성한다.
+email = Email("안녕? 오랜만이야 잘 지내니?", "young@codeit.kr")
+
+# 메시지 내용 출력
+email.print_message()
+# 메시지 전송
+email.send("captain@codeit.kr")
+
+-----------------------------------------------------
+
+>>> 이메일 내용입니다:
+>>> 안녕? 오랜만이야 잘 지내니?
+>>> 이메일을 주소 young@codeit.kr에서 captain@codeit.kr로 보냅니다!
+
+```
+
+
+
+## 함수, 메소드 다형성
+
+- 하나의 메소드로 여러 파라미터를 가질 수 있다.
+
+1. 옵셔널 파라미터를 정의
+
+- 이 경우 옵셔널 파라미터를 가장 뒤에 정의해야 함.
+
+```python
+def new_print(v1, v2=None, v3=None): # optional 파라미터를 정의
+    if v3 is None:
+        if v2 is None:
+            print(v1)
+        else:
+            print(f'{v1} {v2}')
+    else:
+        print(f'{v1} {v2} {v3}')
+
+new_print('alpha')
+new_print('alpha', 'beta')
+new_print('alpha', 'beta', 'omega')
+new_print('this', 100)
+
+--------------------------------------------
+>>> alpha
+>>> alpha beta
+>>> alpha beta omega
+>>> this 100
+```
+
+2. 파라미터 이름을 명시
+
+```python
+def print_name(first_name, last_name, email=""):
+    print(f'{last_name}{first_name} {email}')
+
+print_name('흥민', '손', 'hm@naver.com')
+print_name(last_name='손', email='hm@naver.com', first_name='흥민')
+
+------------------------------------------
+
+>>> 손흥민 hm@naver.com
+>>> 손흥민 hm@naver.com
+```
+
+3. 개수가 확정되지 않은 파라미터
+
+```python
+def add_numbers(message, *numbers): # * 한개는 튜플형태, **는 딕셔너리 형태
+    print(message)
+    return sum(numbers)
+
+print(add_numbers('test1', 7, 3, 5)) # 파라미터 여러개가 들어갈 수 있음
+print(add_numbers('test1', 7, 3, 5, 11))
+print(add_numbers('test1', 2, 2))
+
+def add_names(message, **names): # * 한개는 튜플형태, **는 딕셔너리 형태
+    print(message)
+    return (names)
+
+print(add_names('친구사전', cheolsu='철수', younghee='영희'))
+
+dict_names = {'사과' : 'apple', '오렌지' : 'orange'}
+print(add_names('과일사전', **dict_names))
+
+-------------------------------------------------
+
+test1
+15
+test1
+26
+test1
+4
+친구사전
+{'cheolsu': '철수', 'younghee': '영희'}
+과일사전
+{'사과': 'apple', '오렌지': 'orange'}
+
+```
+
+
+
