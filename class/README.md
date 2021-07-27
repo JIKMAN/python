@@ -1,6 +1,5 @@
 ## 클래스의 성질
 
-![class](../img/class.jpg)
 
 > ## 추상화(Abstraction)
 
